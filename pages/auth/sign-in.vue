@@ -55,6 +55,9 @@ const handleSignIn = async (e) => {
     }
   }
 };
+useHead({
+  title: "Sign In"
+})
 </script>
 <template>
   <main class="site-main sign-in-main">

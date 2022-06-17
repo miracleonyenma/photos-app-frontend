@@ -10,6 +10,9 @@ onMounted(() => {
     navigateTo("/");
   }, 1000);
 });
+useHead({
+  title: "Sign Out"
+})
 </script>
 <template>
   <main class="site-main sign-out-main">

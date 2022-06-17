@@ -61,6 +61,9 @@ const handleRegister = async (e) => {
     }
   }
 };
+useHead({
+  title: "Sign Up"
+})
 </script>
 <template>
   <main class="site-main register-main">
