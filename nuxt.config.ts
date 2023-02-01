@@ -10,7 +10,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      graphqlURL: process.env.STRAPI_GRAPGHQL || 'http://localhost:1337/graphql',
+      graphqlURL: process.env.STRAPI_GRAPHQL || 'http://localhost:1337/graphql',
       strapiURL: process.env.STRAPI_URL || 'http://localhost:1337',
     }
   },

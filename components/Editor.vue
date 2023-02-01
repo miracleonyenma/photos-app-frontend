@@ -120,12 +120,16 @@ const uploadFiles = async () => {
 
   try {
     // send request with `formdata` and authorization headers
-    let { multipleUpload, errors } = await sendReq(graphqlURL, { body: formData, headers: { Authorization: headersList.Authorization } });
+    let { multipleUpload, errors } = await sendReq(graphqlURL, {
+      body: formData,
+      headers: { Authorization: headersList.Authorization },
+    });
     if (errors) throw Error(errors);
     console.log(multipleUpload);
     return multipleUpload;
   } catch (error) {
     console.log(error);
+    throw Error(error);
   }
 };
 
@@ -141,12 +145,13 @@ const createPost = async () => {
 
   // run if images and caption are not null
   if (images.value.length > 0 && caption) {
-    // upload images and get the IDs
-    let uploads = await uploadFiles();
+    try {
+      // upload images and get the IDs
+      let uploads = await uploadFiles();
 
-    // mutation query for creating posts
-    let createPostQuery = {
-      query: `
+      // mutation query for creating posts
+      let createPostQuery = {
+        query: `
       mutation($data: PostInput!){
         createPost(data: $data){
           data{
@@ -172,32 +177,40 @@ const createPost = async () => {
         }
       }
       `,
-      variables: {
-        data: {
-          caption: caption.value,
-          user: user.value.id,
-          // photo: [array of uploaded photo ids]
-          // e.g. photo: [21, 22, 23]
-          photo: uploads.map((file) => file.data.id),
-          publishedAt: new Date(),
+        variables: {
+          data: {
+            caption: caption.value,
+            user: user.value.id,
+            // photo: [array of uploaded photo ids]
+            // e.g. photo: [21, 22, 23]
+            photo: uploads.map((file) => file.data.id),
+            publishedAt: new Date(),
+          },
         },
-      },
-    };
+      };
 
-    try {
-      // send request to create post
-      const { createPost, errors } = await sendReq(graphqlURL, { body: JSON.stringify(createPostQuery), headers: headersList });
-      if (errors) throw Error(errors);
+      try {
+        // send request to create post
+        const { createPost, errors } = await sendReq(graphqlURL, {
+          body: JSON.stringify(createPostQuery),
+          headers: headersList,
+        });
+        if (errors) throw Error(errors);
 
-      // save to state
-      data.value = createPost;
+        // save to state
+        data.value = createPost;
 
-      // reload page
-      window.location.replace("/");
+        // reload page
+        window.location.replace("/");
+      } catch (error) {
+        console.log(error);
+
+        throw Error(error);
+      }
     } catch (error) {
       console.log(error);
-    } finally {
       isLoading.value = false;
+      return;
     }
   }
 };
@@ -209,7 +222,10 @@ const editPost = async () => {
   if (caption) {
     // set uploads to uploaded files if user selects new files to upload
     // else, set uploads to images from the current post data
-    let uploads = images.value.length > 0 ? await uploadFiles().then((res) => res.map((file) => file.data)) : currentImages.value;
+    let uploads =
+      images.value.length > 0
+        ? await uploadFiles().then((res) => res.map((file) => file.data))
+        : currentImages.value;
     console.log({ uploads });
     // query to update post
     let updatePostQuery = {
@@ -249,7 +265,10 @@ const editPost = async () => {
     };
     try {
       // send request to update post
-      const { updatePost, errors } = await sendReq(graphqlURL, { body: JSON.stringify(updatePostQuery), headers: headersList });
+      const { updatePost, errors } = await sendReq(graphqlURL, {
+        body: JSON.stringify(updatePostQuery),
+        headers: headersList,
+      });
 
       if (errors) throw Error(errors);
 
@@ -290,7 +309,7 @@ watch(
       } = post;
       // generate image URLs and ids from post photo data
       currentImages.value = photo.data.map((image) => {
-        console.log({image});
+        console.log({ image });
         let src = image.attributes.url;
         let id = image.id;
         return { src, id };
@@ -308,7 +327,11 @@ watch(
 );
 </script>
 <template>
-  <form :disabled="isLoading || data" @submit="handleSubmit" class="upload-form">
+  <form
+    :disabled="isLoading || data"
+    @submit="handleSubmit"
+    class="upload-form"
+  >
     <div class="wrapper">
       <div class="form-control file">
         <div class="img-cont upload-img-cont">
@@ -319,11 +342,23 @@ watch(
             </li>
           </ul>
         </div>
-        <label for="image-input" class="file-label" :class="{ 'mt-4': imagesURL.length > 0 }">
+        <label
+          for="image-input"
+          class="file-label"
+          :class="{ 'mt-4': imagesURL.length > 0 }"
+        >
           <span type="button" class="cta file-btn">
             {{ fileBtnText }}
           </span>
-          <input :disabled="isLoading || data" @change="previewImg" id="image-input" class="file-input" type="file" accept=".png, .jpg, .jpeg" multiple />
+          <input
+            :disabled="isLoading || data"
+            @change="previewImg"
+            id="image-input"
+            class="file-input"
+            type="file"
+            accept=".png, .jpg, .jpeg"
+            multiple
+          />
         </label>
       </div>
       <div class="form-control">
@@ -343,13 +378,24 @@ watch(
       </div>
       <div class="action-cont">
         <!-- Submit button -->
-        <button :disabled="isLoading || data" type="submit" class="cta w-icon capitalize">
+        <button
+          :disabled="isLoading || data"
+          type="submit"
+          class="cta w-icon capitalize"
+        >
           <PlusCircleIcon v-if="!data" class="icon solid" />
-          <span v-if="!data">{{ !isLoading ? `${action} Post` : "Hang on..." }}</span>
+          <span v-if="!data">{{
+            !isLoading ? `${action} Post` : "Hang on..."
+          }}</span>
           <span v-else>Successfull! 🚀</span>
         </button>
         <!-- Reset button -->
-        <button @click="resetAction" type="button" v-show="action == 'edit'" class="cta w-icon">
+        <button
+          @click="resetAction"
+          type="button"
+          v-show="action == 'edit'"
+          class="cta w-icon"
+        >
           <XCircleIcon class="icon solid" />
           <span>Reset</span>
         </button>
