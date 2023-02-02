@@ -61,7 +61,13 @@ const getPosts = async (page) => {
     },
   };
   try {
-    let { posts, errors } = await sendReq(graphqlURL, { body: JSON.stringify(postsQuery), headers: { "Content-Type": "application/json" } });
+    let { posts, errors } = (await sendReq(graphqlURL, {
+      body: JSON.stringify(postsQuery),
+      headers: { "Content-Type": "application/json" },
+    })) || {
+      posts: {},
+      errors: {},
+    };
     if (errors) throw Error(errors);
     return posts;
   } catch (error) {
@@ -80,7 +86,9 @@ const { data } = await useAsyncData("posts", async ({ _route: { query } }) => {
   <main class="site-main home-main">
     <div class="wrapper">
       <header>
-        <h1 class="text-4xl font-bold">Hey, {{ user?.username || "Stranga!" }}</h1>
+        <h1 class="text-4xl font-bold">
+          Hey, {{ user?.username || "Stranga!" }}
+        </h1>
       </header>
       <div class="content-wrapper">
         <aside class="create-post-aside">
@@ -95,7 +103,10 @@ const { data } = await useAsyncData("posts", async ({ _route: { query } }) => {
                 <p>Sorry, you have to sign in to post</p>
               </div>
             </div>
-            <div v-if="session.pending" :class="{ 'loading-state': session.pending }">
+            <div
+              v-if="session.pending"
+              :class="{ 'loading-state': session.pending }"
+            >
               <RefreshIcon class="icon stroke animate-rotate" />
             </div>
             <Pagination :pagination="data?.meta?.pagination" />
