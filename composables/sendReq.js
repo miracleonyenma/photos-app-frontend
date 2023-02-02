@@ -1,4 +1,3 @@
-
 // ./composables/sendReq.js
 
 // function to send requests
@@ -10,8 +9,14 @@ export const sendReq = async (graphqlURL, opts) => {
       // fetch options
       ...opts,
     });
+    console.log({
+      res,
+      opts,
+    });
     let result = await res.json();
-    console.log(result.errors);
+    console.log({
+      errors: result.errors,
+    });
     // Handle request errors
     if (result.errors) {
       result.errors.forEach((error) => alert(error.message));
@@ -26,4 +31,4 @@ export const sendReq = async (graphqlURL, opts) => {
       errors: error,
     };
   }
-}
+};
